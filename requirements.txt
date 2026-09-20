@@ -1,0 +1,10 @@
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+pydantic>=2.6.0
+bumble>=0.0.234
+pyusb>=1.2.1
+libusb-package>=1.0.26.4
+cryptography>=42.0.0
+apscheduler>=3.10.4
+tinytuya>=1.19.0
+requests>=2.31.0

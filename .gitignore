@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.DS_Store
+data/*.json
+!data/.gitkeep
+!data/config.example.json
+.env
+.venv/
+venv/
+ENV/
+*.part
+*.b64

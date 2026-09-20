@@ -1,0 +1,18 @@
+{
+  "device_mac": "AA:BB:CC:DD:EE:FF",
+  "device_name": "Tuya Fingerbot",
+  "local_key": "YOUR_16_CHAR_KEY",
+  "device_id": "YOUR_DEVICE_ID",
+  "uuid": "YOUR_DEVICE_UUID",
+  "interval_minutes": 11.0,
+  "stop_after_hours": 4.0,
+  "arm_duration_seconds": 1.0,
+  "presses_per_cycle": 2,
+  "repeat_delay_seconds": 5.0,
+  "active_hours_enabled": false,
+  "active_hours_start": "08:00",
+  "active_hours_end": "22:00",
+  "max_press_count": 0,
+  "auto_start_on_boot": false,
+  "port": 8085
+}

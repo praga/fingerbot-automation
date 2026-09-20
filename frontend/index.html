@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fingerbot">
+  <meta name="theme-color" content="#0b0f19">
+  <title>Tuya Fingerbot Automation</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="navbar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="10" rx="3"></rect>
+            <circle cx="12" cy="5" r="2"></circle>
+            <path d="M12 7v4"></path>
+            <line x1="8" y1="16" x2="8" y2="16.01"></line>
+            <line x1="16" y1="16" x2="16.01" y2="16.01"></line>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Fingerbot Auto</h1>
+          <span class="brand-sub">BLE 4.x • Portainer</span>
+        </div>
+      </div>
+
+      <div class="nav-status">
+        <div class="status-pill device-pill" id="deviceStatusPill" title="Target Fingerbot">
+          <span class="dot" id="bleDot"></span>
+          <span id="navMacDisplay" class="font-mono nav-mac-text">--:--:--:--:--:--</span>
+          <span class="rssi-badge font-mono" id="navRssiBadge">-- dBm</span>
+        </div>
+        <button class="icon-btn" id="openSettingsBtn" title="Device & Automation Settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Dashboard Grid -->
+    <main class="dashboard-grid">
+      <!-- Primary Automation Control Card -->
+      <section class="card main-control-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Interval Automation</h2>
+            <p class="card-subtitle">Automated periodic pressing mechanism</p>
+          </div>
+          <div class="active-badge" id="activeStateBadge">
+            <span class="pulse-indicator"></span>
+            <span id="activeStateText">STOPPED</span>
+          </div>
+        </div>
+
+        <!-- Missing Tuya Local Key Warning Banner -->
+        <div class="warning-banner" id="keyWarningBanner" style="display: none;">
+          <div class="warning-banner-left">
+            <span class="warning-banner-icon">⚠️</span>
+            <div class="warning-banner-text">
+              <span class="warning-banner-title">Tuya Local Key Required</span>
+              <span class="warning-banner-sub">Paired SmartLife devices reject unencrypted writes. Motor cannot move without your 16-char key.</span>
+            </div>
+          </div>
+          <button type="button" class="btn btn-warning-action" id="bannerSetupKeyBtn">Setup Key</button>
+        </div>
+
+        <!-- Session Auto-Stop Info Banner (when duration is configured) -->
+        <div class="session-auto-stop-banner" id="sessionStopBanner" style="display: none;">
+          <div class="session-banner-inner">
+            <div class="session-banner-left">
+              <span class="session-banner-icon">⏱️</span>
+              <div>
+                <div class="session-banner-title">Auto-Stop In <span id="sessionCountdownDisplay" class="font-mono">--:--:--</span></div>
+                <div class="session-banner-sub" id="sessionStopTimestamp">Ends at --:--</div>
+              </div>
+            </div>
+            <div class="session-banner-right">
+              <span class="session-duration-tag font-mono" id="sessionDurationTag">1h Session</span>
+            </div>
+          </div>
+          <div class="session-progress-track">
+            <div class="session-progress-bar" id="sessionProgressBar"></div>
+          </div>
+        </div>
+
+        <!-- Next Press Countdown Hero Ring -->
+        <div class="countdown-hero" id="countdownContainer">
+          <div class="countdown-ring">
+            <svg viewBox="0 0 120 120">
+              <defs>
+                <linearGradient id="countdownRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#60a5fa" />
+                  <stop offset="100%" stop-color="#3b82f6" />
+                </linearGradient>
+              </defs>
+              <circle cx="60" cy="60" r="54" class="ring-bg"></circle>
+              <circle cx="60" cy="60" r="54" class="ring-progress" id="countdownCircle"></circle>
+            </svg>
+            <div class="countdown-content">
+              <span class="countdown-label">NEXT PRESS IN</span>
+              <span class="countdown-value font-mono" id="countdownDisplay">--:--</span>
+              <span class="countdown-sub" id="nextRunTimestamp">Automation Idle</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interval Controls -->
+        <div class="control-group">
+          <div class="group-header">
+            <label class="group-label">PRESS EVERY:</label>
+            <span class="group-summary font-mono" id="intervalSummaryText">Every 11 min</span>
+          </div>
+          <div class="presets-grid presets-interval">
+            <button class="preset-btn" data-min="1">1 min</button>
+            <button class="preset-btn" data-min="5">5 min</button>
+            <button class="preset-btn" data-min="10">10 min</button>
+            <button class="preset-btn active" data-min="11">11 min</button>
+            <button class="preset-btn" data-min="15">15 min</button>
+            <button class="preset-btn" data-min="custom">Custom</button>
+          </div>
+          <div class="custom-row" id="customIntervalRow" style="display: none;">
+            <label for="customIntervalInput">Custom Interval:</label>
+            <div class="input-with-unit">
+              <input type="number" id="customIntervalInput" value="11" min="0.1" max="1440" step="0.5" inputmode="decimal">
+              <span class="unit">Minutes</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stop After X Hours Controls -->
+        <div class="control-group">
+          <div class="group-header">
+            <label class="group-label">STOP AFTER:</label>
+            <span class="group-summary font-mono" id="durationSummaryText">Continuous</span>
+          </div>
+          <div class="presets-grid presets-duration">
+            <button class="duration-btn active" data-hours="0">Continuous</button>
+            <button class="duration-btn" data-hours="0.5">30 min</button>
+            <button class="duration-btn" data-hours="1">1 Hour</button>
+            <button class="duration-btn" data-hours="2">2 Hours</button>
+            <button class="duration-btn" data-hours="4">4 Hours</button>
+            <button class="duration-btn" data-hours="custom">Custom</button>
+          </div>
+          <div class="custom-row" id="customDurationRow" style="display: none;">
+            <label for="customDurationInput">Custom Duration:</label>
+            <div class="input-with-unit">
+              <input type="number" id="customDurationInput" value="3" min="0.1" max="168" step="0.5" inputmode="decimal">
+              <span class="unit">Hours</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="actions-row">
+          <button class="btn btn-primary btn-large" id="toggleAutomationBtn">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" id="toggleBtnIcon">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span id="toggleBtnLabel">START AUTOMATION</span>
+          </button>
+
+          <button class="btn btn-secondary btn-large" id="triggerNowBtn" title="Immediately execute 1 press">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>PRESS NOW</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Side Column: Metrics & Device Info -->
+      <div class="side-column">
+        <!-- Quick Stats Card -->
+        <section class="card stats-card">
+          <div class="card-header-compact">
+            <h3 class="card-title">Execution Metrics</h3>
+            <span class="sub-badge font-mono" id="sessionModeBadge">Continuous</span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-box metric-box-success">
+              <div class="metric-header">
+                <span class="metric-icon">✓</span>
+                <span class="metric-name">Successful Presses</span>
+              </div>
+              <span class="metric-num text-success font-mono" id="metricTotalPresses">0</span>
+            </div>
+
+            <div class="metric-box metric-box-danger">
+              <div class="metric-header">
+                <span class="metric-icon">✕</span>
+                <span class="metric-name">Failed Attempts</span>
+              </div>
+              <span class="metric-num text-danger font-mono" id="metricFailedPresses">0</span>
+            </div>
+
+            <div class="metric-box full-width">
+              <div class="metric-header">
+                <span class="metric-icon">⏱</span>
+                <span class="metric-name">Last Press Executed</span>
+              </div>
+              <span class="metric-text font-mono" id="metricLastPressTime">Never</span>
+            </div>
+
+            <div class="metric-box full-width">
+              <div class="metric-header">
+                <span class="metric-icon">📶</span>
+                <span class="metric-name">BLE Arm Status</span>
+              </div>
+              <div class="metric-status-row">
+                <span class="metric-text font-mono" id="metricBleState">Idle</span>
+                <span class="dot-sm" id="metricBleDot"></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Target Device Card -->
+        <section class="card device-card">
+          <div class="card-header-compact">
+            <h3 class="card-title">Target Device</h3>
+            <button class="btn-text-action" id="scanBtn">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6.5 6.5l11 11L12 23V1l5.5 5.5-11 11"></path>
+              </svg>
+              <span>Scan BLE</span>
+            </button>
+          </div>
+          <div class="device-spec-list">
+            <div class="spec-item">
+              <span class="spec-label">Device Name:</span>
+              <span class="spec-val" id="dispDeviceName">Tuya Fingerbot</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">MAC Address:</span>
+              <span class="spec-val font-mono spec-badge" id="dispDeviceMac">--:--:--:--:--:--</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Arm Hold Duration:</span>
+              <span class="spec-val font-mono" id="dispArmDuration">1.0s</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Presses per Cycle:</span>
+              <span class="spec-val font-mono" id="dispPressesPerCycle">2x (5.0s delay)</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Active Schedule:</span>
+              <span class="spec-val" id="dispActiveHours">24/7 (Always Active)</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Tuya Protocol:</span>
+              <span class="spec-val font-mono">Handle 21 (Direct Open)</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Host Adapter:</span>
+              <span class="spec-val font-mono">CSR8510 USB</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Execution Log Card -->
+      <section class="card log-card full-span">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title">Activity & Execution Log</h3>
+            <p class="card-subtitle">Real-time button press event stream</p>
+          </div>
+          <button class="btn-text" id="clearLogsBtn">Clear Logs</button>
+        </div>
+
+        <!-- Responsive Activity Log Stream (Zero horizontal scrolling on mobile) -->
+        <div class="logs-wrapper" id="logsContainer">
+          <div class="empty-cell">No execution logs yet. Click "Press Now" or start automation to begin.</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Settings Modal -->
+    <div class="modal-backdrop" id="settingsModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Device & Automation Settings</h2>
+          <button class="icon-close" id="closeSettingsBtn" aria-label="Close">&times;</button>
+        </div>
+        <form id="settingsForm" class="modal-body">
+          <div class="form-group">
+            <label for="cfgDeviceMac">Fingerbot MAC Address:</label>
+            <div class="input-row">
+              <input type="text" id="cfgDeviceMac" class="font-mono" placeholder="AA:BB:CC:DD:EE:FF" value="" required>
+              <button type="button" class="btn btn-secondary btn-detect" id="modalScanBtn">Detect</button>
+            </div>
+            <span class="form-hint">Physical Bluetooth address of the Tuya Fingerbot.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="cfgDeviceName">Device Display Name:</label>
+            <input type="text" id="cfgDeviceName" value="Tuya Fingerbot">
+          </div>
+
+          <div class="form-group highlight-form-group">
+            <label for="cfgLocalKey">
+              Tuya Local Key:
+              <span class="badge-required font-mono">REQUIRED FOR SMARTLIFE</span>
+            </label>
+            <input type="text" id="cfgLocalKey" class="font-mono" maxlength="16" placeholder="e.g. bf8498f48039ab6d">
+            <span class="form-hint">16-character cryptographic key from your Tuya IoT Platform / SmartLife account.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="cfgDeviceId">Tuya Device ID (Optional):</label>
+            <input type="text" id="cfgDeviceId" class="font-mono" placeholder="e.g. eb12345678abcdef">
+            <span class="form-hint">Virtual device ID associated with your Fingerbot.</span>
+          </div>
+
+          <details class="key-help-accordion">
+            <summary class="key-help-summary">📘 How to get your Tuya Local Key (3 easy steps)</summary>
+            <div class="key-help-content">
+              <ol>
+                <li><strong>Tuya IoT Platform:</strong> Go to <a href="https://iot.tuya.com" target="_blank" rel="noopener" style="color:#60a5fa;">iot.tuya.com</a> (free account).</li>
+                <li><strong>Link SmartLife:</strong> Under <em>Cloud &gt; Development &gt; Link Tuya App Account</em>, scan the QR code with your SmartLife app.</li>
+                <li><strong>View Device Key:</strong> Under <em>Cloud &gt; API Explorer &gt; Smart Home Device System &gt; Device Control &gt; Get Device Details</em>, submit your Device ID to reveal the 16-char <code>local_key</code>!</li>
+              </ol>
+            </div>
+          </details>
+
+          <div class="form-group">
+            <label for="cfgArmDuration">Arm Sustain / Hold Duration (Seconds):</label>
+            <input type="number" id="cfgArmDuration" min="0.5" max="10" step="0.5" value="1.0" inputmode="decimal">
+            <span class="form-hint">How long the arm holds the button down before retracting.</span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cfgPressesPerCycle">Presses per Cycle:</label>
+              <input type="number" id="cfgPressesPerCycle" min="1" max="10" step="1" value="2" inputmode="numeric">
+              <span class="form-hint">Number of times to press the arm (e.g. 2 for double press).</span>
+            </div>
+            <div class="form-group">
+              <label for="cfgRepeatDelay">Repeat Delay (s):</label>
+              <input type="number" id="cfgRepeatDelay" min="1" max="60" step="0.5" value="5.0" inputmode="decimal">
+              <span class="form-hint">Seconds between presses.</span>
+            </div>
+          </div>
+
+          <hr class="form-divider">
+
+          <div class="form-group">
+            <label class="toggle-checkbox-label">
+              <input type="checkbox" id="cfgActiveHoursToggle">
+              <span>Enable Active Hours Window (Skip presses outside window)</span>
+            </label>
+          </div>
+
+          <div class="form-row" id="activeHoursRow" style="display: none;">
+            <div class="form-group">
+              <label for="cfgStartTime">Start Time:</label>
+              <input type="time" id="cfgStartTime" value="08:00">
+            </div>
+            <div class="form-group">
+              <label for="cfgEndTime">End Time:</label>
+              <input type="time" id="cfgEndTime" value="22:00">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="toggle-checkbox-label">
+              <input type="checkbox" id="cfgAutoStartToggle">
+              <span>Auto-start automation on container boot</span>
+            </label>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="cancelSettingsBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Scan Results Modal -->
+    <div class="modal-backdrop" id="scanModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Discovered BLE Devices</h2>
+          <button class="icon-close" id="closeScanBtn" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="scan-status-text" id="scanStatusMsg">Scanning nearby Bluetooth devices...</p>
+          <div class="scan-list" id="scanResultsList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

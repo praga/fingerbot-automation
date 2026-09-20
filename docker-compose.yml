@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  fingerbot-automation:
+    image: python:3.11-slim
+    container_name: fingerbot-automation
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "8187:8085"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-UTC}
+      - DATA_DIR=/app/data
+    volumes:
+      - ${DATA_DIR:-./data}:/app/data
+      - ${APP_DIR:-.}:/app/code
+      - /dev/bus/usb:/dev/bus/usb
+    command: >
+      sh -c "
+        apt-get update && apt-get install -y --no-install-recommends libusb-1.0-0 libatomic1 curl &&
+        cd /app/code &&
+        pip install --no-cache-dir -r requirements.txt &&
+        python -m uvicorn backend.main:app --host 0.0.0.0 --port 8085
+      "
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8085/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 35s
