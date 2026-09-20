@@ -190,6 +190,26 @@ The responsive web interface is accessible at:
 ```
 http://<SERVER_IP>:8187  (or http://localhost:8187)
 ```
+
+> **Port Mapping Note**: In [`docker-compose.yml`](docker-compose.yml), the service maps host port `8187` to internal container port `8085` (`ports: ["8187:8085"]`). To change the host port, simply modify the left-hand port value (e.g., `"8085:8085"` or `"9000:8085"`).
+
 - **"Press Fingerbot"**: Triggers an on-demand double-press cycle immediately.
 - **"Start Automation"**: Begins recurring 11-minute double presses with live dual countdowns (next press & auto-stop).
 - **Settings Icon**: Edit MAC, Local Key, hold duration, double-press repeats, and daily active hours.
+
+---
+
+## 9. Diagnostic & Protocol Probing Tools (`tools/`)
+
+The repository includes a suite of standalone command-line scripts in [`tools/`](tools/) useful for protocol analysis, hardware diagnostics, and testing without running the full web server:
+
+| Script | Purpose |
+| :--- | :--- |
+| [`tools/actuate_live.py`](tools/actuate_live.py) | Standalone CLI script to run the authenticated v4 handshake and actuate the Fingerbot motor. |
+| [`tools/test_v4_firmware_handshake.py`](tools/test_v4_firmware_handshake.py) | Comprehensive handshake validation script verifying `DEV_INFO`, `srand` extraction, session key derivation, and `PAIR_REQ` negotiation. |
+| [`tools/diagnose_motor.py`](tools/diagnose_motor.py) | Motor travel, stroke duration, and mechanical timing diagnostic tool. |
+| [`tools/probe_key4.py`](tools/probe_key4.py) | Key derivation and security flag validation probe. |
+| [`tools/test_bt785_fingerbot.py`](tools/test_bt785_fingerbot.py) | Low-level GATT characteristic probe and raw packet logger. |
+
+All scripts automatically pull device credentials from `data/config.json` via [`tools/_config.py`](tools/_config.py) or fall back to standard environment variables (`DEVICE_MAC`, `LOCAL_KEY`, `DEVICE_UUID`, `DEVICE_ID`).
+
