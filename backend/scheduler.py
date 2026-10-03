@@ -90,7 +90,8 @@ class FingerbotScheduler:
         result = await ble_controller.press_fingerbot(
             arm_duration=config.arm_duration_seconds,
             repeat_count=getattr(config, "presses_per_cycle", 2),
-            repeat_delay=getattr(config, "repeat_delay_seconds", 5.0)
+            repeat_delay=getattr(config, "repeat_delay_seconds", 5.0),
+            arm_stroke=getattr(config, "arm_stroke_percent", 67)
         )
         self.last_result = result
 
@@ -252,6 +253,7 @@ class FingerbotScheduler:
             "device_mac": config.device_mac,
             "device_name": config.device_name,
             "arm_duration_seconds": config.arm_duration_seconds,
+            "arm_stroke_percent": getattr(config, "arm_stroke_percent", 67),
             "active_hours_enabled": config.active_hours_enabled,
             "active_hours_start": config.active_hours_start,
             "active_hours_end": config.active_hours_end,

@@ -69,6 +69,7 @@ const metricBleDot = document.getElementById("metricBleDot");
 const dispDeviceName = document.getElementById("dispDeviceName");
 const dispDeviceMac = document.getElementById("dispDeviceMac");
 const dispArmDuration = document.getElementById("dispArmDuration");
+const dispArmStroke = document.getElementById("dispArmStroke");
 const dispPressesPerCycle = document.getElementById("dispPressesPerCycle");
 const dispActiveHours = document.getElementById("dispActiveHours");
 
@@ -441,6 +442,9 @@ function renderStatus(s) {
   dispDeviceName.textContent = s.device_name;
   dispDeviceMac.textContent = s.device_mac;
   dispArmDuration.textContent = `${s.arm_duration_seconds}s`;
+  if (dispArmStroke) {
+    dispArmStroke.textContent = `${s.arm_stroke_percent || 67}%`;
+  }
   if (dispPressesPerCycle) {
     dispPressesPerCycle.textContent = `${s.presses_per_cycle || 2}x (${s.repeat_delay_seconds || 5.0}s delay)`;
   }
@@ -648,6 +652,9 @@ async function openSettings() {
     document.getElementById("cfgLocalKey").value = currentConfig.local_key || "";
     if (document.getElementById("cfgDeviceId")) document.getElementById("cfgDeviceId").value = currentConfig.device_id || "";
     document.getElementById("cfgArmDuration").value = currentConfig.arm_duration_seconds || 1.0;
+    if (document.getElementById("cfgArmStroke")) {
+      document.getElementById("cfgArmStroke").value = currentConfig.arm_stroke_percent || 67;
+    }
     if (document.getElementById("cfgPressesPerCycle")) {
       document.getElementById("cfgPressesPerCycle").value = currentConfig.presses_per_cycle || 2;
     }
@@ -675,6 +682,7 @@ async function handleSaveSettings(e) {
     local_key: document.getElementById("cfgLocalKey").value.trim(),
     device_id: document.getElementById("cfgDeviceId") ? document.getElementById("cfgDeviceId").value.trim() : "",
     arm_duration_seconds: parseFloat(document.getElementById("cfgArmDuration").value) || 1.0,
+    arm_stroke_percent: parseInt(document.getElementById("cfgArmStroke")?.value) || 67,
     presses_per_cycle: parseInt(document.getElementById("cfgPressesPerCycle")?.value) || 2,
     repeat_delay_seconds: parseFloat(document.getElementById("cfgRepeatDelay")?.value) || 5.0,
     active_hours_enabled: cfgActiveHoursToggle.checked,

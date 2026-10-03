@@ -48,7 +48,8 @@ class FingerbotBleController:
         self,
         arm_duration: float = 2.0,
         repeat_count: int = 2,
-        repeat_delay: float = 5.0
+        repeat_delay: float = 5.0,
+        arm_stroke: Optional[int] = None
     ) -> Dict[str, Any]:
         """
         Connects to the Tuya Fingerbot over BLE, executes the authenticated Tuya BLE v4
@@ -204,6 +205,17 @@ class FingerbotBleController:
                         total_cycles = max(1, int(repeat_count))
                         hold_duration = max(float(arm_duration), 2.0)
                         sn = 3
+
+                        # Configure Arm Stroke Travel % (DP 5)
+                        stroke_pct = arm_stroke if arm_stroke is not None else getattr(config, "arm_stroke_percent", 67)
+                        if stroke_pct is not None and 1 <= int(stroke_pct) <= 100:
+                            logger.info(f"Configuring arm stroke travel to {stroke_pct}% (DP 5)...")
+                            dp5_packets = codec.build_dp5_stroke(stroke_percent=int(stroke_pct), sn=sn)
+                            sn += 1
+                            for pkt in dp5_packets:
+                                await peer.write_value(write_char, pkt, with_response=False)
+                                await asyncio.sleep(0.03)
+                            await asyncio.sleep(0.1)
 
                         for cycle in range(1, total_cycles + 1):
                             self.last_status = f"Actuating arm ({cycle}/{total_cycles})"

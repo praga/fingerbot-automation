@@ -251,6 +251,10 @@
               <span class="spec-val font-mono" id="dispArmDuration">1.0s</span>
             </div>
             <div class="spec-item">
+              <span class="spec-label">Arm Stroke Travel:</span>
+              <span class="spec-val font-mono" id="dispArmStroke">67%</span>
+            </div>
+            <div class="spec-item">
               <span class="spec-label">Presses per Cycle:</span>
               <span class="spec-val font-mono" id="dispPressesPerCycle">2x (5.0s delay)</span>
             </div>
@@ -339,6 +343,15 @@
             <label for="cfgArmDuration">Arm Sustain / Hold Duration (Seconds):</label>
             <input type="number" id="cfgArmDuration" min="0.5" max="10" step="0.5" value="1.0" inputmode="decimal">
             <span class="form-hint">How long the arm holds the button down before retracting.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="cfgArmStroke">Arm Stroke Travel (%):</label>
+            <div class="input-with-unit">
+              <input type="number" id="cfgArmStroke" min="1" max="100" step="1" value="67" inputmode="numeric">
+              <span class="unit">%</span>
+            </div>
+            <span class="form-hint">Physical servo arm reach (1-100%, original default 67%).</span>
           </div>
 
           <div class="form-row">

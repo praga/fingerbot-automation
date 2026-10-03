@@ -7,6 +7,7 @@
   "interval_minutes": 11.0,
   "stop_after_hours": 4.0,
   "arm_duration_seconds": 1.0,
+  "arm_stroke_percent": 67,
   "presses_per_cycle": 2,
   "repeat_delay_seconds": 5.0,
   "active_hours_enabled": false,

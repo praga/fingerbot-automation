@@ -18,6 +18,7 @@ class AppConfig(BaseModel):
     repeat_delay_seconds: float = Field(default=5.0, description="Delay between consecutive presses in seconds")
     stop_after_hours: Optional[float] = Field(default=None, description="Auto-stop automation after X hours (None or 0 = continuous)")
     arm_duration_seconds: float = Field(default=1.0, description="How long the finger arm holds down before retracting")
+    arm_stroke_percent: int = Field(default=67, ge=1, le=100, description="Arm stroke travel percentage (1-100%, original default 67%)")
     active_hours_enabled: bool = Field(default=False, description="Restrict presses to specific hours")
     active_hours_start: str = Field(default="08:00", description="HH:MM start time")
     active_hours_end: str = Field(default="22:00", description="HH:MM end time")
